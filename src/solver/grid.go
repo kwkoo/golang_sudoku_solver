@@ -36,28 +36,27 @@ func (grid *Grid) Solve() bool {
 	if index == -1 {
 		return true
 	}
-	return grid.solveForCell(index)
-}
 
-func (grid *Grid) solveForCell(index int) bool {
-	nextEmpty := grid.nextEmptyCellFromIndex(index + 1)
+	s := newStack()
+	c := newCellContext(index, grid.nextEmptyCellFromIndex(index+1), grid.candidatesForCell(index))
+	s.push(c)
 
-	candidates := grid.candidatesForCell(index)
-	if len(candidates) == 0 {
-		return false
-	}
-	for _, candidate := range candidates {
-		grid[index] = candidate
-		if nextEmpty == -1 {
-			return true
+	for s.hasMore() {
+		c, _ = s.pop()
+		if c.hasMoreCandidates() {
+			candidate := c.nextCandidate()
+			grid[c.index] = candidate
+			if c.nextEmpty == -1 {
+				return true
+			}
+			s.push(c)
+			s.push(newCellContext(c.nextEmpty, grid.nextEmptyCellFromIndex(c.nextEmpty+1), grid.candidatesForCell(c.nextEmpty)))
+		} else {
+			// unsuccessful - so we'll reset the cell to empty
+			grid[c.index] = 0
 		}
-		if grid.solveForCell(nextEmpty) {
-			return true
-		}
 	}
 
-	// unsuccessful - so we'll reset the cell to empty
-	grid[index] = 0
 	return false
 }
 
