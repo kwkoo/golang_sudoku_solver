@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -155,6 +156,7 @@ const staticHTML = `<!DOCTYPE html>
 </html>`
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Request for URI: ", r.URL.Path)
 	if r.URL.Path == "/puzzle" {
 		w.Header().Set("Content-Type", "application/json")
 		grid, err := solver.LoadPuzzle()
@@ -184,6 +186,11 @@ func outputError(w http.ResponseWriter, err error) {
 }
 
 func main() {
+	port := 8080
+	flag.IntVar(&port, "port", 8080, "HTTP listener port")
+	flag.Parse()
+
+	log.Print("Listening on port ", port)
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
