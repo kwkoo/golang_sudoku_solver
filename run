@@ -1,0 +1,17 @@
+#!/bin/bash
+
+VERSION="0.1"
+
+cd `dirname $0`
+BASE=`pwd`
+cd - >> /dev/null
+
+cd ${BASE}
+
+docker run \
+	--rm \
+	-it \
+	--name solver \
+	-p 8080:8080 \
+	kwkoo/solver:${VERSION}
+

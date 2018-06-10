@@ -1,0 +1,11 @@
+#!/bin/bash
+
+VERSION="0.1"
+
+cd `dirname $0`
+BASE=`pwd`
+
+docker build \
+	--rm \
+	-t kwkoo/solver:${VERSION} \
+	.
