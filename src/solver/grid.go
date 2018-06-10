@@ -25,7 +25,152 @@ func (grid Grid) Print(w io.Writer) {
 			fmt.Fprintln(w, "")
 		}
 		if i%27 == 26 && i != 80 {
-			fmt.Fprintln(w, "------------")
+			fmt.Fprintln(w, "---+---+----")
 		}
 	}
+}
+
+// Solve will keep running till it finds a solution to the puzzle. Returns true if successful, false if there is a problem.
+func (grid *Grid) Solve() bool {
+	index := grid.nextEmptyCellFromIndex(0)
+	if index == -1 {
+		return true
+	}
+	return grid.solveForCell(index)
+}
+
+func (grid *Grid) solveForCell(index int) bool {
+	nextEmpty := grid.nextEmptyCellFromIndex(index + 1)
+
+	candidates := grid.candidatesForCell(index)
+	if len(candidates) == 0 {
+		return false
+	}
+	for _, candidate := range candidates {
+		grid[index] = candidate
+		if nextEmpty == -1 {
+			return true
+		}
+		if grid.solveForCell(nextEmpty) {
+			return true
+		}
+	}
+
+	// unsuccessful - so we'll reset the cell to empty
+	grid[index] = 0
+	return false
+}
+
+func (grid Grid) clone() Grid {
+	target := grid
+	return target
+}
+
+// returns -1 if there are no empty cells left
+func (grid Grid) nextEmptyCellFromIndex(index int) int {
+	for i := index; i < 81; i++ {
+		if grid[i] == 0 {
+			return i
+		}
+	}
+	return -1
+}
+
+func (grid Grid) candidatesForCell(index int) []int {
+	if index > 80 {
+		return []int{}
+	}
+	return intersectingCandidates(
+		candidatesFromDigits(grid.digitsInRow(index)),
+		candidatesFromDigits(grid.digitsInColumn(index)),
+		candidatesFromDigits(grid.digitsInBox(index)))
+}
+
+func (grid Grid) digitsInRow(index int) []int {
+	var digits []int
+	var value int
+	y := index / 9
+	for i := y * 9; i < (y+1)*9; i++ {
+		value = grid[i]
+		if value != 0 {
+			digits = append(digits, value)
+		}
+	}
+
+	return digits
+}
+
+func (grid Grid) digitsInColumn(index int) []int {
+	var digits []int
+	var value int
+	x := index % 9
+	for i := x; i < 81; i += 9 {
+		value = grid[i]
+		if value != 0 {
+			digits = append(digits, value)
+		}
+	}
+
+	return digits
+}
+
+func (grid Grid) digitsInBox(index int) []int {
+	var digits []int
+	var value int
+	row := index / 9
+	column := index % 9
+
+	// find index of top-left cell in box
+	i := (row/3)*27 + (column/3)*3
+
+	for y := 0; y < 3; y++ {
+		for x := 0; x < 3; x++ {
+			value = grid[i]
+			i++
+			if value != 0 {
+				digits = append(digits, value)
+			}
+		}
+		i += 6
+	}
+
+	return digits
+}
+
+// returns inverse of argument
+func candidatesFromDigits(digits []int) []int {
+	var taken [9]bool
+	var candidates []int
+	for _, i := range digits {
+		taken[i-1] = true
+	}
+	for i, v := range taken {
+		if !v {
+			candidates = append(candidates, i+1)
+		}
+	}
+
+	return candidates
+}
+
+func intersectingCandidates(x, y, z []int) []int {
+	var count [9]int
+	for _, value := range x {
+		count[value-1]++
+	}
+	for _, value := range y {
+		count[value-1]++
+	}
+	for _, value := range z {
+		count[value-1]++
+	}
+
+	var candidates []int
+	for i, v := range count {
+		if v == 3 {
+			candidates = append(candidates, i+1)
+		}
+	}
+
+	return candidates
 }
