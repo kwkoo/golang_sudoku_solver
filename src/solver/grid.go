@@ -3,6 +3,8 @@ package solver
 import (
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 )
 
 // Grid represents the Sudoku grid, with 0 representing an empty cell.
@@ -28,6 +30,14 @@ func (grid Grid) Print(w io.Writer) {
 			fmt.Fprintln(w, "---+---+----")
 		}
 	}
+}
+
+func (grid Grid) String() string {
+	var b strings.Builder
+	for _, value := range grid {
+		b.WriteString(strconv.Itoa(value))
+	}
+	return b.String()
 }
 
 // Solve will keep running till it finds a solution to the puzzle. Returns true if successful, false if there is a problem.
@@ -60,7 +70,8 @@ func (grid *Grid) Solve() bool {
 	return false
 }
 
-func (grid Grid) clone() Grid {
+// Clone produces a copy of grid.
+func (grid Grid) Clone() Grid {
 	target := grid
 	return target
 }

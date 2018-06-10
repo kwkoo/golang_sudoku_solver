@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Sudoku Solver</title>
+		<style>
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(3, 180px);
+				grid-template-rows: repeat(3, 180px);
+			}
+			.box {
+				border: 1px solid rgba(0, 0, 0, 0.8);
+				display: grid;
+				grid-template-columns: repeat(3, 60px);
+				grid-template-rows: repeat(3, 60px);
+			}
+			.cell {
+				border: 1px solid rgba(0, 0, 0, 0.3);
+				font-size: 30px;
+				text-align: center;
+				justify-content: center;
+				vertical-align: bottom;
+				padding: 10px
+			}
+		</style>
+	</head>
+	<body onload="initPage()">
+		<h1>Sudoku Solver</h1>
+		<div>
+			<input id="show" type="checkbox" onclick="populateGrid()"/>Show Answers
+			<div id="grid" class="grid">
+			</div>
+		</div>
+		<script type="text/javascript">
+			var reply = {"question":"009060000040010000050700320890400070000507000002009180400000002005000760060200400", "answer":"729365841346812957158794326893421675614587293572639184481976532235148769967253418"}
+
+			function initPage() {
+				buildGrid();
+				populateGrid();
+			}
+
+			function buildGrid() {
+				var b = 1;
+				var boxStart;
+				var s;
+				var grid = document.getElementById("grid");
+				for (var b=0; b<9; b++) {
+					var box = document.createElement("div");
+					box.className = "box";
+					box.id = 'box' + b;
+					boxStart = parseInt(b/3)*27 + (b%3)*3;
+					for (var i=0; i<9; i++) {
+						var index = boxStart + parseInt(i/3)*6 + i;
+						var cell = document.createElement("div");
+						cell.className = "cell";
+						cell.id = 'cell' + index;
+						box.appendChild(cell);
+					}
+					grid.appendChild(box);
+				}
+			}
+
+			function populateGrid() {
+				var content;
+				var s;
+				var cell;
+				if (document.getElementById("show").checked == true) {
+					content = reply.answer;
+				} else {
+					content = reply.question;
+				}
+				for (var i=0; i<81; i++) {
+					cell = document.getElementById("cell" + i);
+					s = content.charAt(i);
+					if (s == "0") { s = ""; }
+					cell.innerText = s;
+				}
+			}
+		</script>
+	</body>
+</html>
