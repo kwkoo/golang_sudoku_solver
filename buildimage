@@ -1,5 +1,6 @@
 #!/bin/bash
 
+IMAGENAME="kwkoo/solver"
 VERSION="0.1"
 
 cd `dirname $0`
@@ -7,5 +8,5 @@ BASE=`pwd`
 
 docker build \
 	--rm \
-	-t kwkoo/solver:${VERSION} \
+	-t ${IMAGENAME}:${VERSION} \
 	.

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+IMAGENAME="kwkoo/solver"
 VERSION="0.1"
 
 cd `dirname $0`
@@ -13,5 +14,5 @@ docker run \
 	-it \
 	--name solver \
 	-p 8080:8080 \
-	kwkoo/solver:${VERSION}
+	${IMAGENAME}:${VERSION}
 
