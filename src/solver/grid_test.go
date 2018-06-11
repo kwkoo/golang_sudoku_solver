@@ -13,5 +13,5 @@ func TestSolve(t *testing.T) {
 		value, _ := strconv.Atoi(string(r[i]))
 		grid[i] = value
 	}
-	grid.Solve()
+	grid.Solve(nil)
 }

@@ -10,6 +10,12 @@ import (
 // Grid represents the Sudoku grid, with 0 representing an empty cell.
 type Grid [81]int
 
+// UpdateEvent represents a Grid update event.
+type UpdateEvent struct {
+	Index int
+	Value int
+}
+
 // Print prints a grid to the writer.
 func (grid Grid) Print(w io.Writer) {
 	var value int
@@ -32,6 +38,20 @@ func (grid Grid) Print(w io.Writer) {
 	}
 }
 
+// NewGridFromString returns a Grid object from an 81 character string.
+func NewGridFromString(s string) (Grid, error) {
+	grid := Grid{}
+	r := []rune(s)
+	for i := 0; i < 81; i++ {
+		value, err := strconv.Atoi(string(r[i]))
+		if err != nil {
+			return grid, fmt.Errorf("could not convert %s to integer", string(r[i]))
+		}
+		grid[i] = value
+	}
+	return grid, nil
+}
+
 func (grid Grid) String() string {
 	var b strings.Builder
 	for _, value := range grid {
@@ -41,7 +61,8 @@ func (grid Grid) String() string {
 }
 
 // Solve will keep running till it finds a solution to the puzzle. Returns true if successful, false if there is a problem.
-func (grid *Grid) Solve() bool {
+func (grid *Grid) Solve(ch chan UpdateEvent) bool {
+	defer close(ch)
 	index := grid.nextEmptyCellFromIndex(0)
 	if index == -1 {
 		return true
@@ -50,12 +71,16 @@ func (grid *Grid) Solve() bool {
 	s := newStack()
 	s.push(newCellContext(index, grid.nextEmptyCellFromIndex(index+1), grid.candidatesForCell(index)))
 	var context *cellcontext
+	var updateEvent UpdateEvent
 
 	for s.hasMore() {
 		context, _ = s.peek()
 		if context.hasMoreCandidates() {
 			candidate := context.nextCandidate()
 			grid[context.index] = candidate
+			updateEvent.Index = context.index
+			updateEvent.Value = candidate
+			ch <- updateEvent
 			if context.nextEmpty == -1 {
 				s.pop()
 				return true
@@ -64,6 +89,9 @@ func (grid *Grid) Solve() bool {
 		} else {
 			// unsuccessful - so we'll reset the cell to empty
 			grid[context.index] = 0
+			updateEvent.Index = context.index
+			updateEvent.Value = 0
+			ch <- updateEvent
 			s.pop()
 		}
 	}

@@ -1,0 +1,3 @@
+[submodule "src/solver/vendor/github.com/gorilla/websocket"]
+	path = src/solver/vendor/github.com/gorilla/websocket
+	url = https://github.com/gorilla/websocket
