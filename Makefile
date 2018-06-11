@@ -20,5 +20,5 @@ coverage:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go tool cover -html=$(GOPATH)/$(COVERAGEOUTPUT) -o $(GOPATH)/$(COVERAGEHTML)
 	open $(GOPATH)/$(COVERAGEHTML)
 
-run:
+execute:
 	@GOPATH=$(GOPATH) go run $(GOPATH)/src/$(PACKAGE)/cmd/$(PACKAGE)/main.go

@@ -25,11 +25,7 @@ func (c *cellcontext) nextCandidate() int {
 		return -1
 	}
 	value := c.candidates[0]
-	if candidateCount == 1 {
-		c.candidates = []int{}
-	} else {
-		c.candidates = c.candidates[1:]
-	}
+	c.candidates = c.candidates[1:]
 	return value
 }
 
@@ -49,19 +45,19 @@ func (s *stack) push(c cellcontext) {
 	s.data = append(s.data, c)
 }
 
-func (s *stack) pop() (cellcontext, bool) {
+func (s stack) peek() (*cellcontext, bool) {
 	count := len(s.data)
 	if count == 0 {
-		return cellcontext{}, false
+		return nil, false
 	}
-	var value cellcontext
-	if count == 1 {
-		value = s.data[0]
-		s.data = []cellcontext{}
+	return &s.data[count-1], true
+}
 
-	} else {
-		value = s.data[count-1]
-		s.data = s.data[:count-1]
+func (s *stack) pop() (*cellcontext, bool) {
+	value, ok := s.peek()
+	if !ok {
+		return value, ok
 	}
+	s.data = s.data[:len(s.data)-1]
 	return value, true
 }

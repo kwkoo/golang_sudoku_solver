@@ -40,4 +40,32 @@ func TestStack(t *testing.T) {
 	if s.hasMore() {
 		t.Error("expected stack to be empty, but it is not")
 	}
+
+	c, ok = s.pop()
+	if ok {
+		t.Error("stack should be empty but it did not return a !ok")
+	}
+}
+
+func TestCellContext(t *testing.T) {
+	tables := []struct {
+		hasMore bool
+		value   int
+	}{
+		{true, 0},
+		{true, 1},
+		{true, 2},
+		{false, -1},
+	}
+	candidates := []int{0, 1, 2}
+	c := newCellContext(0, -1, candidates)
+	for _, table := range tables {
+		if table.hasMore != c.hasMoreCandidates() {
+			t.Errorf("expected hasMoreCandidates() to return a value of %v - got %v instead", table.hasMore, c.hasMoreCandidates())
+		}
+		candidate := c.nextCandidate()
+		if candidate != table.value {
+			t.Errorf("expected a candidate value of %d - got %d instead", table.value, candidate)
+		}
+	}
 }

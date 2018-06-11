@@ -48,22 +48,23 @@ func (grid *Grid) Solve() bool {
 	}
 
 	s := newStack()
-	c := newCellContext(index, grid.nextEmptyCellFromIndex(index+1), grid.candidatesForCell(index))
-	s.push(c)
+	s.push(newCellContext(index, grid.nextEmptyCellFromIndex(index+1), grid.candidatesForCell(index)))
+	var context *cellcontext
 
 	for s.hasMore() {
-		c, _ = s.pop()
-		if c.hasMoreCandidates() {
-			candidate := c.nextCandidate()
-			grid[c.index] = candidate
-			if c.nextEmpty == -1 {
+		context, _ = s.peek()
+		if context.hasMoreCandidates() {
+			candidate := context.nextCandidate()
+			grid[context.index] = candidate
+			if context.nextEmpty == -1 {
+				s.pop()
 				return true
 			}
-			s.push(c)
-			s.push(newCellContext(c.nextEmpty, grid.nextEmptyCellFromIndex(c.nextEmpty+1), grid.candidatesForCell(c.nextEmpty)))
+			s.push(newCellContext(context.nextEmpty, grid.nextEmptyCellFromIndex(context.nextEmpty+1), grid.candidatesForCell(context.nextEmpty)))
 		} else {
 			// unsuccessful - so we'll reset the cell to empty
-			grid[c.index] = 0
+			grid[context.index] = 0
+			s.pop()
 		}
 	}
 
