@@ -35,7 +35,7 @@ func StaticHTML(w io.Writer) {
 					color: black;
 				}
 				.dynamic {
-					color: gray;
+					color: blue;
 				}
 				#error {
 					visibility: hidden;
@@ -47,6 +47,8 @@ func StaticHTML(w io.Writer) {
 			<div id="main">
 				<div style="padding: 10px;">
 					<input id="solveButton" type="button" value="Solve Puzzle" onclick="solvePuzzle()"/>
+					&nbsp;
+					<input id="delayRange" type="range" min="0" max="10" value="1" onchange="sendDelay()"/>
 				</div>
 				<div id="grid" class="grid">
 				</div>
@@ -57,6 +59,21 @@ func StaticHTML(w io.Writer) {
 			</div>
 			<script type="text/javascript">
 				var reply;
+				var globalSocket = null;
+
+				function getDelay() {
+					return document.getElementById("delayRange").value;
+				}
+
+				function sendDelay() {
+					if (globalSocket != null) {
+						var arrBuf = new ArrayBuffer(1);
+						var view = new Uint8Array(arrBuf);
+						view[0] = getDelay();
+						//console.log("new delay = " + getDelay());
+						globalSocket.send(arrBuf);
+					}
+				}
 
 				function showError(message) {
 					document.getElementById("errormessage").innerText = message;
@@ -92,11 +109,10 @@ func StaticHTML(w io.Writer) {
 					xmlhttp.send();
 				}
 
-var tmp;
 				function solvePuzzle() {
 					document.getElementById("solveButton").disabled=true;
-					console.log("Initiating call to server");
-					websocket = new WebSocket("ws://" + window.location.host + "/solve/" + reply.puzzle);
+					//console.log("Initiating call to server");
+					var websocket = new WebSocket("ws://" + window.location.host + "/solve/" + reply.puzzle);
 					websocket.binaryType = 'arraybuffer';
 
 					websocket.onerror = function(evt) {
@@ -104,8 +120,10 @@ var tmp;
 						showError("Websocket error");
 					}
 					websocket.onopen = function(evt) {
-						console.log("open:");
-						console.log(evt);
+						//console.log("open:");
+						//console.log(evt);
+						globalSocket = websocket;
+						sendDelay();
 					}
 					websocket.onmessage = function (evt) {
 						if (evt.type != "message") { return; }
@@ -116,6 +134,10 @@ var tmp;
 						var value = data[1];
 						if ((index > 255) || (value > 9)) { return; }
 						setCell(index, value);
+					}
+					websocket.onclose = function (evt) {
+						//console.log("websocket closed");
+						globalSocket = null;
 					}
 				}
 	

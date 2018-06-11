@@ -10,12 +10,13 @@ import (
 	"solver"
 	"solver/helper"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
-// number of microseconds between update events
-//const delay = 200
+const defaultDelay = 1
 
 var upgrader = websocket.Upgrader{}
 
@@ -64,15 +65,62 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 		return
 	}
 	defer c.Close()
-	ch := make(chan solver.UpdateEvent)
-	go grid.Solve(ch)
-	message := make([]byte, 2, 2)
-	for event, ok := <-ch; ok; event, ok = <-ch {
-		message[0] = byte(event.Index)
-		message[1] = byte(event.Value)
-		c.WriteMessage(websocket.BinaryMessage, message)
-		//time.Sleep(time.Duration(delay * time.Microsecond))
-	}
+	updatech := make(chan solver.UpdateEvent)
+	delaych := make(chan int)
+	var wg sync.WaitGroup
+	go func(ch chan int, c *websocket.Conn) {
+		wg.Add(1)
+		for {
+			_, payload, err := c.ReadMessage()
+			if err != nil {
+				break
+			}
+			if len(payload) == 0 {
+				continue
+			}
+			p := payload[0]
+			if p < 11 {
+				delay := int(p)
+				ch <- delay
+			}
+		}
+		log.Println("Terminating delay goroutine")
+		wg.Done()
+	}(delaych, c)
+	go func(ch chan solver.UpdateEvent, c *websocket.Conn) {
+		wg.Add(1)
+		delay := defaultDelay
+		message := make([]byte, 2, 2)
+		keepgoing := true
+		for keepgoing {
+			select {
+			case event, ok := <-updatech:
+				if !ok {
+					keepgoing = false
+					break
+				}
+				message[0] = byte(event.Index)
+				message[1] = byte(event.Value)
+				c.WriteMessage(websocket.BinaryMessage, message)
+				time.Sleep(time.Duration(delay*100) * time.Duration(time.Microsecond))
+			case delayEvent, ok := <-delaych:
+				if !ok {
+					keepgoing = false
+					break
+				}
+				delay = delayEvent
+				log.Printf("Setting delay to %d", delay)
+			}
+		}
+		log.Println("Terminating update goroutine")
+		wg.Done()
+	}(updatech, c)
+
+	grid.Solve(updatech)
+	close(updatech)
+	wg.Wait()
+	close(delaych)
+	log.Println("Request done")
 }
 
 func outputError(w http.ResponseWriter, err error) {

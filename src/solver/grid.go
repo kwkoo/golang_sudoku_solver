@@ -62,7 +62,7 @@ func (grid Grid) String() string {
 
 // Solve will keep running till it finds a solution to the puzzle. Returns true if successful, false if there is a problem.
 func (grid *Grid) Solve(ch chan UpdateEvent) bool {
-	defer close(ch)
+	//defer close(ch)
 	index := grid.nextEmptyCellFromIndex(0)
 	if index == -1 {
 		return true
