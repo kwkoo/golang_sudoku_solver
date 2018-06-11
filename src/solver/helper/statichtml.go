@@ -92,11 +92,13 @@ func StaticHTML(w io.Writer) {
 					xmlhttp.send();
 				}
 
-
+var tmp;
 				function solvePuzzle() {
 					document.getElementById("solveButton").disabled=true;
 					console.log("Initiating call to server");
 					websocket = new WebSocket("ws://" + window.location.host + "/solve/" + reply.puzzle);
+					websocket.binaryType = 'arraybuffer';
+
 					websocket.onerror = function(evt) {
 						console.log(evt);
 						showError("Websocket error");
@@ -107,13 +109,13 @@ func StaticHTML(w io.Writer) {
 					}
 					websocket.onmessage = function (evt) {
 						if (evt.type != "message") { return; }
-						var colon = evt.data.indexOf(":");
-						if (colon == -1) { return; }
-						var left = evt.data.substring(0, colon);
-						var right = evt.data.substring(colon+1);
-						var index = parseInt(left);
-						var value = parseInt(right);
-						if (!isNaN(index) && !isNaN(value)) { setCell(index, value); }
+						var data = new Uint8Array(evt.data);
+
+						if (data.length != 2) { return; }
+						var index = data[0];
+						var value = data[1];
+						if ((index > 255) || (value > 9)) { return; }
+						setCell(index, value);
 					}
 				}
 	

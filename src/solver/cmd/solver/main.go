@@ -10,13 +10,12 @@ import (
 	"solver"
 	"solver/helper"
 	"strings"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 // number of microseconds between update events
-const delay = 200
+//const delay = 200
 
 var upgrader = websocket.Upgrader{}
 
@@ -67,9 +66,12 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 	defer c.Close()
 	ch := make(chan solver.UpdateEvent)
 	go grid.Solve(ch)
+	message := make([]byte, 2, 2)
 	for event, ok := <-ch; ok; event, ok = <-ch {
-		c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("%d:%d", event.Index, event.Value)))
-		time.Sleep(time.Duration(delay * time.Microsecond))
+		message[0] = byte(event.Index)
+		message[1] = byte(event.Value)
+		c.WriteMessage(websocket.BinaryMessage, message)
+		//time.Sleep(time.Duration(delay * time.Microsecond))
 	}
 }
 
