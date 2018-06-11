@@ -116,7 +116,7 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 	}(updatech, c)
 
 	grid.Solve(updatech)
-	log.Println("Terminating solve goroutine")
+	log.Println("Done solving the puzzle")
 	updatech <- solver.UpdateEvent{Index: -1}
 
 	wg.Wait()

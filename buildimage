@@ -10,3 +10,8 @@ docker build \
 	--rm \
 	-t ${IMAGENAME}:${VERSION} \
 	.
+
+echo "Done building image, sleeping..."
+sleep 2
+echo "Removing intermediate build container"
+docker images -f label=builder=true | xargs docker rmi
