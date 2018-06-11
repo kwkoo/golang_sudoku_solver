@@ -67,9 +67,7 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 	defer c.Close()
 	updatech := make(chan solver.UpdateEvent)
 	delaych := make(chan int)
-	var wg sync.WaitGroup
 	go func(ch chan int, c *websocket.Conn) {
-		wg.Add(1)
 		for {
 			_, payload, err := c.ReadMessage()
 			if err != nil {
@@ -85,17 +83,18 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 			}
 		}
 		log.Println("Terminating delay goroutine")
-		wg.Done()
 	}(delaych, c)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func(ch chan solver.UpdateEvent, c *websocket.Conn) {
-		wg.Add(1)
 		delay := defaultDelay
 		message := make([]byte, 2, 2)
 		keepgoing := true
 		for keepgoing {
 			select {
 			case event, ok := <-updatech:
-				if !ok {
+				if !ok || event.Index == -1 {
 					keepgoing = false
 					break
 				}
@@ -117,8 +116,11 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 	}(updatech, c)
 
 	grid.Solve(updatech)
-	close(updatech)
+	log.Println("Terminating solve goroutine")
+	updatech <- solver.UpdateEvent{Index: -1}
+
 	wg.Wait()
+	close(updatech)
 	close(delaych)
 	log.Println("Request done")
 }
