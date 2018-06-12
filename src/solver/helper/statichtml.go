@@ -129,11 +129,15 @@ func StaticHTML(w io.Writer) {
 						if (evt.type != "message") { return; }
 						var data = new Uint8Array(evt.data);
 
-						if (data.length != 2) { return; }
-						var index = data[0];
-						var value = data[1];
-						if ((index > 255) || (value > 9)) { return; }
-						setCell(index, value);
+						var len = data.length
+						if ((len < 2) || (len%2 == 1)) { return; }
+						for (var i=0; i<len; i+=2) {
+							var index = data[i];
+							var value = data[i+1];
+							if ((index < 81) && (value < 10)) {
+								setCell(index, value);
+							}
+						}
 					}
 					websocket.onclose = function (evt) {
 						//console.log("websocket closed");

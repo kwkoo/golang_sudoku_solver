@@ -17,6 +17,7 @@ import (
 )
 
 const defaultDelay = 1
+const bufferSize = 50
 
 var upgrader = websocket.Upgrader{}
 
@@ -65,7 +66,7 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 		return
 	}
 	defer c.Close()
-	updatech := make(chan solver.UpdateEvent)
+	updatech := make(chan solver.UpdateEvent, bufferSize-1)
 	delaych := make(chan int)
 	go func(ch chan int, c *websocket.Conn) {
 		for {
@@ -89,18 +90,37 @@ func handleSolveRequest(w http.ResponseWriter, r *http.Request, grid solver.Grid
 	wg.Add(1)
 	go func(ch chan solver.UpdateEvent, c *websocket.Conn) {
 		delay := defaultDelay
-		message := make([]byte, 2, 2)
+		var message [bufferSize * 2]byte
 		keepgoing := true
+		count := 1
 		for keepgoing {
 			select {
 			case event, ok := <-updatech:
 				if !ok || event.Index == -1 {
+					log.Print("got -1 at 1")
 					keepgoing = false
 					break
 				}
 				message[0] = byte(event.Index)
 				message[1] = byte(event.Value)
-				c.WriteMessage(websocket.BinaryMessage, message)
+				count = 1
+				// more messages in the queue - let's fill it up
+				depth := len(updatech)
+				if depth > 0 {
+					for i := count; i <= depth; i++ {
+						event, ok := <-updatech
+						if !ok || event.Index == -1 {
+							log.Print("got -1 at 2")
+							keepgoing = false
+							break
+						} else {
+							count++
+							message[i*2] = byte(event.Index)
+							message[i*2+1] = byte(event.Value)
+						}
+					}
+				}
+				c.WriteMessage(websocket.BinaryMessage, message[:count*2])
 				time.Sleep(time.Duration(delay*100) * time.Duration(time.Microsecond))
 			case delayEvent, ok := <-delaych:
 				if !ok {
