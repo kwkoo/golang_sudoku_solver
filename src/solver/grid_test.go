@@ -13,5 +13,7 @@ func TestSolve(t *testing.T) {
 		value, _ := strconv.Atoi(string(r[i]))
 		grid[i] = value
 	}
-	grid.Solve(nil)
+	if !grid.Solve(nil) {
+		t.Error("did not manage to solve the puzzle")
+	}
 }

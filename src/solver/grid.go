@@ -79,7 +79,9 @@ func (grid *Grid) Solve(ch chan UpdateEvent) bool {
 			grid[context.index] = candidate
 			updateEvent.Index = context.index
 			updateEvent.Value = candidate
-			ch <- updateEvent
+			if ch != nil {
+				ch <- updateEvent
+			}
 			if context.nextEmpty == -1 {
 				s.pop()
 				return true
@@ -90,7 +92,9 @@ func (grid *Grid) Solve(ch chan UpdateEvent) bool {
 			grid[context.index] = 0
 			updateEvent.Index = context.index
 			updateEvent.Value = 0
-			ch <- updateEvent
+			if ch != nil {
+				ch <- updateEvent
+			}
 			s.pop()
 		}
 	}
