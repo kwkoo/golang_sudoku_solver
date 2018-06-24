@@ -5,6 +5,7 @@ GOBIN=$(GOPATH)/bin
 COVERAGEOUTPUT=coverage.out
 COVERAGEHTML=coverage.html
 
+.PHONY: build clean test coverage run
 build:
 	@echo "Building..."
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go build -o $(GOBIN)/$(PACKAGE) $(PACKAGE)/cmd/$(PACKAGE)
@@ -20,5 +21,5 @@ coverage:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go tool cover -html=$(GOPATH)/$(COVERAGEOUTPUT) -o $(GOPATH)/$(COVERAGEHTML)
 	open $(GOPATH)/$(COVERAGEHTML)
 
-execute:
+run:
 	@GOPATH=$(GOPATH) go run $(GOPATH)/src/$(PACKAGE)/cmd/$(PACKAGE)/main.go
