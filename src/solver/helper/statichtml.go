@@ -163,6 +163,7 @@ func StaticHTML(w io.Writer) {
 	
 				function initPage() {
 					document.getElementById("solveButton").disabled=true;
+					document.getElementById("enterButton").disabled=true;
 					document.getElementById("error").style.visibility="hidden";
 					buildGrid();
 					loadPuzzle();
@@ -250,6 +251,7 @@ func StaticHTML(w io.Writer) {
 						setCell(i, state.charAt(i));
 					}
 					document.getElementById("solveButton").disabled=false;
+					document.getElementById("enterButton").disabled=false;
 				}
 
 			</script>
