@@ -4,8 +4,10 @@ GOPATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 GOBIN=$(GOPATH)/bin
 COVERAGEOUTPUT=coverage.out
 COVERAGEHTML=coverage.html
+IMAGENAME="kwkoo/$(PACKAGE)"
+VERSION="0.1"
 
-.PHONY: build clean test coverage run
+.PHONY: build clean test coverage run debug image container
 build:
 	@echo "Building..."
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go build -o $(GOBIN)/$(PACKAGE) $(PACKAGE)/cmd/$(PACKAGE)
@@ -26,3 +28,9 @@ run:
 
 debug:
 	@GOPATH=$(GOPATH) go run $(GOPATH)/src/$(PACKAGE)/cmd/$(PACKAGE)/main.go -debug true
+
+image:
+	docker build --rm -t $(IMAGENAME):$(VERSION) $(GOPATH)
+
+runcontainer:
+	docker run --rm -it --name $(PACKAGE) -p 8080:8080 $(IMAGENAME):$(VERSION)
