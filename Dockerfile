@@ -1,4 +1,4 @@
-FROM golang:1.10.2 as builder
+FROM golang:1.10.3 as builder
 LABEL builder=true
 COPY src /go/src/
 RUN set -x && \
