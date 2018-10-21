@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"solver"
 	"solver/helper"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,8 +21,11 @@ import (
 
 const defaultDelay = 1
 const bufferSize = 50
+const staticBufferSize = 4096
+const staticFilename = "debug.html"
 
 var upgrader = websocket.Upgrader{}
+var debug = false
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
@@ -51,7 +57,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if path == "/" || path == "/index.html" {
-		helper.StaticHTML(w)
+		staticContent(w)
 		return
 	}
 
@@ -153,11 +159,58 @@ func outputError(w http.ResponseWriter, err error) {
 	fmt.Fprintln(w, "}")
 }
 
+func staticContent(w io.Writer) {
+	if !debug {
+		helper.StaticHTML(w)
+		return
+	}
+
+	// We're in debug mode - dump contents of debug.html.
+	f, err := os.Open(staticFilename)
+	if err != nil {
+		log.Printf("Error opening static HTML %s: %v", staticFilename, err)
+		fmt.Fprintf(w, "Error opening static HTML %s: %v", staticFilename, err)
+		return
+	}
+	defer f.Close()
+	buf := make([]byte, staticBufferSize, staticBufferSize)
+	for {
+		n, err := f.Read(buf)
+		if n > 0 {
+			w.Write(buf[:n])
+		}
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("IO Error while reading static HTML %s: %v", staticFilename, err)
+			}
+			break
+		}
+	}
+}
+
 func main() {
-	port := 8080
-	flag.IntVar(&port, "port", 8080, "HTTP listener port")
+	port := 0
+	portenv := os.Getenv("PORT")
+	if len(portenv) > 0 {
+		port, _ = strconv.Atoi(portenv)
+	}
+	if port == 0 {
+		port = 8080
+		flag.IntVar(&port, "port", port, "HTTP listener port")
+	}
+
+	debugenv := os.Getenv("DEBUG")
+	if len(debugenv) > 0 {
+		debug = true
+	} else {
+		flag.BoolVar(&debug, "debug", debug, "Use debug.html instead of the hardcoded statichtml.go file.")
+	}
+
 	flag.Parse()
 
+	if debug {
+		log.Print("Debug mode on")
+	}
 	log.Print("Listening on port ", port)
 	http.HandleFunc("/", handler)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))

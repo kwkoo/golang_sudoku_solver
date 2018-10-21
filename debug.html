@@ -1,13 +1,4 @@
-package helper
-
-import (
-	"fmt"
-	"io"
-)
-
-// StaticHTML returns a hardcoded HTML page for the application.
-func StaticHTML(w io.Writer) {
-	fmt.Fprint(w, `<!DOCTYPE html>
+<!DOCTYPE html>
 	<html>
 		<head>
 			<title>Sudoku Solver</title>
@@ -253,5 +244,4 @@ func StaticHTML(w io.Writer) {
 
 			</script>
 		</body>
-	</html>`)
-}
+	</html>
