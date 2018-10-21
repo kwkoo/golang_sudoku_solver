@@ -190,6 +190,7 @@ func StaticHTML(w io.Writer) {
 				}
 
 				function prepForManualEntry() {
+					document.getElementById("enterButton").disabled=true;
 					document.getElementById("keypad").style.display="block";
 					document.getElementById("keypad").style.visibility="visible";
 					resetGrid();
